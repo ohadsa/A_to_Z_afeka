@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 
 }
-rootProject.name = "Memory_ohad"
+rootProject.name = "IntegrativitClient"
 include ':app'
