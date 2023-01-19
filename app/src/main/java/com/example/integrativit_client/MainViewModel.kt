@@ -87,10 +87,12 @@ class MainViewModel @Inject constructor(
     val myWishList = MutableStateFlow(listOf<MovieResponse>())
     val myFavorite = MutableStateFlow(listOf<MovieResponse>())
 
-    fun initPage(){
+    fun initPage() {
         getUser()
-        updateWishList()
-        updateFavoriteList()
+        try {
+            updateWishList()
+            updateFavoriteList()
+        } catch (e: java.lang.Exception) { }
         viewModelScope.launch {
             myFavorite.collect { list ->
                 favIds.value = list.map { it.objectId.internalObjectId }
@@ -125,43 +127,53 @@ class MainViewModel @Inject constructor(
 
     private fun addToFavorite(id: ObjectId) {
         viewModelScope.launch {
-            moviesApi.addToFavorite(
-                value =
-                CommandRequest(
-                    targetObject = TargetObject(objectId = id),
-                    invokedBy = InvokedBy(userId = UserId(email = myUser.value.email))
+            try {
+                moviesApi.addToFavorite(
+                    value =
+                    CommandRequest(
+                        targetObject = TargetObject(objectId = id),
+                        invokedBy = InvokedBy(userId = UserId(email = myUser.value.email))
+                    )
                 )
-            )
-            updateFavoriteList()
-            favIds.value = myFavorite.value.map { it.objectId.internalObjectId }
+                updateFavoriteList()
+                favIds.value = myFavorite.value.map { it.objectId.internalObjectId }
+
+            } catch (e: java.lang.Exception) {
+            }
         }
     }
 
     private fun addToWish(id: ObjectId) {
         viewModelScope.launch {
-            moviesApi.addToWish(
-                value =
-                CommandRequest(
-                    targetObject = TargetObject(objectId = id),
-                    invokedBy = InvokedBy(userId = UserId(email = myUser.value.email))
+            try {
+                moviesApi.addToWish(
+                    value =
+                    CommandRequest(
+                        targetObject = TargetObject(objectId = id),
+                        invokedBy = InvokedBy(userId = UserId(email = myUser.value.email))
+                    )
                 )
-            )
-            updateWishList()
-            wishIds.value = myWishList.value.map { it.objectId.internalObjectId }
+                updateWishList()
+                wishIds.value = myWishList.value.map { it.objectId.internalObjectId }
+            } catch (e: java.lang.Exception) {
+            }
         }
     }
 
     private fun removeFromFavorite(id: ObjectId) {
         viewModelScope.launch {
-            moviesApi.removeFromFavorite(
-                value =
-                CommandRequest(
-                    targetObject = TargetObject(objectId = id),
-                    invokedBy = InvokedBy(userId = UserId(email = myUser.value.email))
+            try {
+                moviesApi.removeFromFavorite(
+                    value =
+                    CommandRequest(
+                        targetObject = TargetObject(objectId = id),
+                        invokedBy = InvokedBy(userId = UserId(email = myUser.value.email))
+                    )
                 )
-            )
-            updateFavoriteList()
-            favIds.value = myFavorite.value.map { it.objectId.internalObjectId }
+                updateFavoriteList()
+                favIds.value = myFavorite.value.map { it.objectId.internalObjectId }
+            } catch (e: java.lang.Exception) {
+            }
         }
     }
 
@@ -171,15 +183,20 @@ class MainViewModel @Inject constructor(
 
     private fun removeFromWish(id: ObjectId) {
         viewModelScope.launch {
-            moviesApi.removeFromWish(
-                value =
-                CommandRequest(
-                    targetObject = TargetObject(objectId = id),
-                    invokedBy = InvokedBy(userId = UserId(email = myUser.value.email))
+            try {
+                moviesApi.removeFromWish(
+                    value =
+                    CommandRequest(
+                        targetObject = TargetObject(objectId = id),
+                        invokedBy = InvokedBy(userId = UserId(email = myUser.value.email))
+                    )
                 )
-            )
-            updateWishList()
-            wishIds.value = myWishList.value.map { it.objectId.internalObjectId }
+                updateWishList()
+                wishIds.value = myWishList.value.map { it.objectId.internalObjectId }
+
+
+            } catch (e: java.lang.Exception) {
+            }
         }
     }
 
@@ -192,27 +209,34 @@ class MainViewModel @Inject constructor(
 
     private fun updateFavoriteList() {
         viewModelScope.launch {
-            myFavorite.emit(moviesApi.getAllFavorite(
-                value =
-                CommandRequest(
-                    targetObject = TargetObject(objectId = ObjectId()),
-                    invokedBy = InvokedBy(userId = UserId(email = myUser.value.email))
-                )
-            )?.map { it.also { it.objectDetails.isFavorite = true } } ?: listOf())
-            favIds.value = myFavorite.value.map { it.objectId.internalObjectId }
+            try {
+                myFavorite.emit(moviesApi.getAllFavorite(
+                    value =
+                    CommandRequest(
+                        targetObject = TargetObject(objectId = ObjectId()),
+                        invokedBy = InvokedBy(userId = UserId(email = myUser.value.email))
+                    )
+                )?.map { it.also { it.objectDetails?.isFavorite = true } } ?: listOf())
+                favIds.value = myFavorite.value.map { it.objectId.internalObjectId }
+
+            } catch (e: java.lang.Exception) {
+            }
         }
     }
 
     private fun updateWishList() {
         viewModelScope.launch {
-            myWishList.emit(moviesApi.getAllWish(
-                value =
-                CommandRequest(
-                    targetObject = TargetObject(objectId = ObjectId()),
-                    invokedBy = InvokedBy(userId = UserId(email = myUser.value.email))
-                )
-            )?.map { it.also { it.objectDetails.isWish = true } } ?: listOf())
-            wishIds.value = myWishList.value.map { it.objectId.internalObjectId }
+            try {
+                myWishList.emit(moviesApi.getAllWish(
+                    value =
+                    CommandRequest(
+                        targetObject = TargetObject(objectId = ObjectId()),
+                        invokedBy = InvokedBy(userId = UserId(email = myUser.value.email))
+                    )
+                )?.map { it.also { it.objectDetails?.isWish = true } } ?: listOf())
+                wishIds.value = myWishList.value.map { it.objectId.internalObjectId }
+            } catch (e: java.lang.Exception) {
+            }
         }
     }
 
@@ -233,7 +257,7 @@ class MainViewModel @Inject constructor(
     fun login(runWhenSuccess: () -> Unit, runWhenFailure: () -> Unit) {
         viewModelScope.launch {
             try {
-                userResponse.value = moviesApi.login(email = myUser.value.email)
+                userResponse.value = moviesApi.login(email = myUser.value.email) ?: UserResponse()
                 runWhenSuccess()
 
             } catch (e: java.lang.Exception) {
@@ -245,27 +269,30 @@ class MainViewModel @Inject constructor(
 
     fun signUp() {
         viewModelScope.launch {
-            userResponse.value = moviesApi.signup(myUser.value)
+            try {
+                userResponse.value = moviesApi.signup(myUser.value)
+            } catch (e: java.lang.Exception) {
+            }
         }
     }
 
     fun WishListButtonTapped(movie: MovieResponse) {
-        if (movie.objectDetails.isWish) {
+        if (movie.objectDetails?.isWish == true) {
             removeFromWish(movie.objectId)
             movie.objectDetails.isWish = false
         } else {
             addToWish(movie.objectId)
-            movie.objectDetails.isWish = true
+            movie.objectDetails?.isWish = true
         }
     }
 
     fun favoriteButtonTapped(movie: MovieResponse) {
-        if (movie.objectDetails.isFavorite) {
+        if (movie.objectDetails?.isFavorite == true) {
             removeFromFavorite(movie.objectId)
             movie.objectDetails.isFavorite = false
         } else {
             addToFavorite(movie.objectId)
-            movie.objectDetails.isFavorite = true
+            movie.objectDetails?.isFavorite = true
         }
     }
 

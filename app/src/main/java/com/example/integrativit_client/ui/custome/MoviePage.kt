@@ -40,6 +40,7 @@ fun MoviePage(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.94f)
+                .verticalScroll(rememberScrollState())
                 .background(Color.White),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
@@ -53,13 +54,14 @@ fun MoviePage(
                 val (
                     backdropImage,
                     text,
+                    youtube,
                     movieTitleBox,
                     moviePosterImage,
                     translucentBr,
                 ) = createRefs()
 
                 ImageOrDefault(
-                    imageUrl = "$BASE_BACKDROP_IMAGE_URL${curItem.objectDetails.backdrop_path}",
+                    imageUrl = "$BASE_BACKDROP_IMAGE_URL${curItem.objectDetails?.backdrop_path}",
                     modifier = Modifier
                         .fillMaxWidth()
                         .fillMaxHeight()
@@ -128,7 +130,7 @@ fun MoviePage(
                     }
 
                     Text(
-                        text = curItem.objectDetails.title,
+                        text = curItem.objectDetails?.title?:"",
                         modifier = Modifier
                             .padding(top = 2.dp, start = 4.dp, bottom = 4.dp)
                             .fillMaxWidth(0.5F),
@@ -139,7 +141,7 @@ fun MoviePage(
                     )
 
                     Text(
-                        text = curItem.objectDetails.release_date,
+                        text = curItem.objectDetails?.release_date?:"",
                         modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.W500,
@@ -147,7 +149,7 @@ fun MoviePage(
                     )
 
                     CircularProgressbar(
-                        number = curItem.objectDetails.vote_average.toFloat() * 10,
+                        number = (curItem.objectDetails?.vote_average?.toFloat() ?: 9f ) * 10,
                         size = 28.dp,
                         indicatorThickness = 6.dp,
                         modifier = Modifier
@@ -156,7 +158,7 @@ fun MoviePage(
                 }
 
                 ImageOrDefault(
-                    imageUrl = "$BASE_POSTER_IMAGE_URL/${curItem.objectDetails.poster_path}",
+                    imageUrl = "$BASE_POSTER_IMAGE_URL/${curItem.objectDetails?.poster_path}",
                     modifier = Modifier
                         .padding(16.dp)
                         .clip(RoundedCornerShape(4.dp))
@@ -173,7 +175,6 @@ fun MoviePage(
                 Column(modifier = Modifier
                     .padding(top = 3.dp, bottom = 4.dp, start = 12.dp, end = 4.dp)
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
                     .constrainAs(text) {
                         top.linkTo(moviePosterImage.bottom, 24.dp)
                         start.linkTo(parent.start, 12.dp)
@@ -181,16 +182,18 @@ fun MoviePage(
                     }
                 ) {
                     MyText(
-                        text = curItem.objectDetails.overview,
+                        text = curItem.objectDetails?.overview?:"",
                         overflow = TextOverflow.Ellipsis,
                         font = MyFont(weight = FontWeight.Normal,
                             textSize = 18.sp,
                             fontStyle = FontStyle.Italic),
                         color = Color.Black.copy(alpha = 0.75F))
                 }
+                Spacer(modifier = Modifier.width(4.dp))
 
             }
             Spacer(modifier = Modifier.height(36.dp))
+
             Row(
                 Modifier
                     .padding(12.dp)
@@ -206,7 +209,9 @@ fun MoviePage(
                     onClick = { onAddToFavoriteTapped(curItem) })
 
 
+
                 Spacer(modifier = Modifier.width(4.dp))
+
                 ButtonV2(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -216,7 +221,7 @@ fun MoviePage(
                     onClick = { onAddToWishListTapped(curItem) })
             }
         }
-        if (curItem.objectDetails.isFavorite) {
+        if (curItem.objectDetails?.isFavorite == true) {
             DrawableImage(
                 modifier = Modifier
                     .padding(24.dp)

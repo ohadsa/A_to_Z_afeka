@@ -15,7 +15,7 @@ interface MoviesApi {
     suspend fun login(
         @Path("superapp") superapp: String = "2023.ohad.saada",
         @Path("email") email: String,
-    ): UserResponse
+    ): UserResponse?
 
 
     @POST("/superapp/users")
@@ -26,7 +26,7 @@ interface MoviesApi {
         @Path("superapp") superapp: String = SuperApp,
         @Path("userEmail") userEmail: String,
         @Body value: UserResponse,
-    ): UserResponse
+    ): UserResponse?
 
 //{"userSuperapp", "userEmail", "size", "page"}@Query("address") String address,
 
@@ -39,7 +39,7 @@ interface MoviesApi {
         @Query("size") size: Int = 10,
         @Query("page") page: Int? = 0,
 
-        ): List<MovieResponse>
+        ): List<MovieResponse>?
 
     @GET("/superapp/objects/searchbyAlias/{alias}")
     suspend fun getNowPlayingMovies(
@@ -49,7 +49,7 @@ interface MoviesApi {
         @Query("size") size: Int = 10,
         @Query("page") page: Int? = 0,
 
-        ): List<MovieResponse>
+        ): List<MovieResponse>?
 
     @GET("/superapp/objects/searchbyAlias/{alias}")
     suspend fun getTopRatedMovies(
@@ -59,7 +59,7 @@ interface MoviesApi {
         @Query("size") size: Int = 10,
         @Query("page") page: Int? = 0,
 
-        ): List<MovieResponse>
+        ): List<MovieResponse>?
 
 
     @POST("/superapp/miniapp/{miniAppName}")

@@ -11,7 +11,7 @@ import javax.inject.Inject
 
 
 class MoviesPagingSource @Inject constructor(
-    private val fetchFunc: suspend (page: Int?) -> List<MovieResponse>,
+    private val fetchFunc: suspend (page: Int?) -> List<MovieResponse>?,
     private val favIds : List<String>,
     private val wishIds : List<String>,
 ) : PagingSource<Int, MovieResponse>() {
@@ -24,9 +24,10 @@ class MoviesPagingSource @Inject constructor(
             println("page = $key")
             first = false
             val data = fetchFunc(key)
+            if(data.isNullOrEmpty()) throw Exception()
             data.forEach {
-                it.objectDetails.isWish = wishIds.contains(it.objectId.internalObjectId)
-                it.objectDetails.isFavorite = favIds.contains(it.objectId.internalObjectId)
+                it.objectDetails?.isWish = wishIds.contains(it.objectId.internalObjectId)
+                it.objectDetails?.isFavorite = favIds.contains(it.objectId.internalObjectId)
             }
             LoadResult.Page(data, null, if (data.isEmpty()) null else key + 1)
         } catch (e: java.lang.Exception) {

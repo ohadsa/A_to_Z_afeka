@@ -151,8 +151,8 @@ fun GamePage(
                         Row(horizontalArrangement = Arrangement.SpaceBetween) {
                             MovieItem(modifier = Modifier
                                 .height(160.dp),
-                                item.objectDetails.poster_path.toPath(),
-                                item.objectDetails.isFavorite)
+                                item.objectDetails?.poster_path?.toPath()?:"",
+                                item.objectDetails?.isFavorite ?:false)
                             {
                                 curItem = item
                                 showSheet(true)
@@ -182,8 +182,8 @@ fun GamePage(
                         Row(horizontalArrangement = Arrangement.SpaceBetween) {
                             MovieItem(modifier = Modifier
                                 .height(160.dp),
-                                item.objectDetails.poster_path.toPath(),
-                                item.objectDetails.isFavorite
+                                item.objectDetails?.poster_path?.toPath()?:"",
+                                item.objectDetails?.isFavorite?:false
                             ) {
                                 curItem = item
                                 showSheet(true)
@@ -216,8 +216,8 @@ fun GamePage(
                         Row(horizontalArrangement = Arrangement.SpaceBetween) {
                             MovieItem(modifier = Modifier
                                 .height(160.dp),
-                                item.objectDetails.poster_path.toPath(),
-                                item.objectDetails.isFavorite
+                                item.objectDetails?.poster_path?.toPath()?:"",
+                                item.objectDetails?.isFavorite?:false
                             ) {
                                 curItem = item
                                 showSheet(true)
@@ -235,27 +235,28 @@ fun GamePage(
 
 @Composable
 fun LandScapeMovieCell(
-    item: MovieResponse,
+    item: MovieResponse?,
     onTapped: () -> Unit,
 ) {
+    if(item == null ) return
     Box {
         Column {
             MovieItem(modifier = Modifier
                 .height(160.dp)
                 .width(280.dp),
-                item.objectDetails.backdrop_path.toPath(), item.objectDetails.isFavorite, big = true
+                item.objectDetails?.backdrop_path?.toPath()?:"", item.objectDetails?.isFavorite?:false, big = true
             ) {
                 onTapped()
             }
             MyText(
                 modifier = Modifier.padding(start = 12.dp),
-                text = item.objectDetails.title,
+                text = item.objectDetails?.title?:"",
                 font = MyFont.Body14Italic,
                 color = MyColors.indigoDark)
 
         }
         CircularProgressbar(
-            number = item.objectDetails.vote_average.toFloat() * 10,
+            number = (item.objectDetails?.vote_average?.toFloat()?:9f) * 10,
             size = 28.dp,
             indicatorThickness = 6.dp,
             modifier = Modifier

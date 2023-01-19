@@ -148,26 +148,26 @@ fun PagingMovieListCell(
         }
         itemsIndexed(list, { _, it -> it.objectId.internalObjectId })
         { index, item ->
-            if (item != null) {
+            if (item != null ) {
                 Box {
                     Column {
                         MovieItem(modifier = Modifier
                             .height(240.dp)
                             .fillMaxWidth(),
-                            item.objectDetails.backdrop_path.toPath(),
-                            item.objectDetails.isFavorite
+                            item.objectDetails?.backdrop_path?.toPath()?:"",
+                            item.objectDetails?.isFavorite?:false
                         ) {
                             onTapped(item)
                         }
                         MyText(
                             modifier = Modifier.padding(start = 12.dp),
-                            text = item.objectDetails.title,
+                            text = item.objectDetails?.title?:"",
                             font = MyFont.Body14Italic,
                             color = MyColors.indigoDark)
                         Spacer(modifier = Modifier.height(24.dp))
                     }
                     CircularProgressbar(
-                        number = item.objectDetails.vote_average.toFloat() * 10,
+                        number = (item.objectDetails?.vote_average?.toFloat()?:9f) * 10,
                         size = 32.dp,
                         indicatorThickness = 8.dp,
                         modifier = Modifier
@@ -219,21 +219,21 @@ fun ListMovieCell(
                     MovieItem(modifier = Modifier
                         .height(240.dp)
                         .fillMaxWidth(),
-                        item.objectDetails.backdrop_path.toPath(),
-                        item.objectDetails.isFavorite
+                        item.objectDetails?.backdrop_path?.toPath()?:"",
+                        item.objectDetails?.isFavorite?:false
                     ) {
                         onTapped(item)
 
                     }
                     MyText(
                         modifier = Modifier.padding(start = 12.dp),
-                        text = item.objectDetails.title,
+                        text = item.objectDetails?.title?:"",
                         font = MyFont.Body14Italic,
                         color = MyColors.indigoDark)
                     Spacer(modifier = Modifier.height(24.dp))
                 }
                 CircularProgressbar(
-                    number = item.objectDetails.vote_average.toFloat() * 10,
+                    number = (item.objectDetails?.vote_average?.toFloat()?:9f) * 10,
                     size = 32.dp,
                     indicatorThickness = 8.dp,
                     modifier = Modifier

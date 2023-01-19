@@ -4,7 +4,7 @@ data class MovieResponse(
    val objectId :ObjectId = ObjectId() ,
    val type :String ="",
    val alias: String ="",
-   val objectDetails : MyMovie =MyMovie()
+   val objectDetails : MyMovie? = MyMovie()
 )
 
 data class MyMovie(
