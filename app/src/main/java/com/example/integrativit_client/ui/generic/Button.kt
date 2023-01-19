@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.integrativit_client.ui.theme.MyColors
-import com.example.integrativit_client.ui.theme.generic.DrawableImage
 
 enum class ButtonVariant {
     Primary, Secondary, Tertiary

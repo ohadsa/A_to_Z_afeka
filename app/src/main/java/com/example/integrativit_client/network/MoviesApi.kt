@@ -1,36 +1,156 @@
 package com.example.integrativit_client.network
 
 
-import com.example.integrativit_client.models.MyUser
-import com.example.integrativit_client.models.UserResponse
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.POST
-import retrofit2.http.Path
+import CommandRequest
+import InvokedBy
+import TargetObject
+import UserId
+import com.example.integrativit_client.models.*
+import retrofit2.http.*
 
 
-interface MoviesAPi {
+interface MoviesApi {
 
-    @GET("/superapp/users/2023.ohad.saada/{email}")
-    suspend fun login(@Path("email") email: String ): UserResponse
+    @GET("/superapp/users/{superapp}/{email}")
+    suspend fun login(
+        @Path("superapp") superapp: String = "2023.ohad.saada",
+        @Path("email") email: String,
+    ): UserResponse
 
 
     @POST("/superapp/users")
     suspend fun signup(@Body value: MyUser): UserResponse
-//    @GET("/3/discover/movie&with_genres={genreId}")
-//    suspend fun genreMovies(@Path("genreId") genreId: Int ) : ItemListWrapper<Movie>
+
+    @PUT("/superapp/users/{superapp}/{userEmail}")
+    suspend fun updateUser(
+        @Path("superapp") superapp: String = SuperApp,
+        @Path("userEmail") userEmail: String,
+        @Body value: UserResponse,
+    ): UserResponse
+
+//{"userSuperapp", "userEmail", "size", "page"}@Query("address") String address,
+
+
+    @GET("/superapp/objects/searchbyAlias/{alias}")
+    suspend fun getUpcomingMovies(
+        @Path("alias") alias: String = upcoming,
+        @Query("userSuperapp") userSuperapp: String = SuperApp,
+        @Query("userEmail") userEmail: String = "test@example.com",
+        @Query("size") size: Int = 10,
+        @Query("page") page: Int? = 0,
+
+        ): List<MovieResponse>
+
+    @GET("/superapp/objects/searchbyAlias/{alias}")
+    suspend fun getNowPlayingMovies(
+        @Path("alias") alias: String = nowPlaying,
+        @Query("userSuperapp") userSuperapp: String = SuperApp,
+        @Query("userEmail") userEmail: String = "test@example.com",
+        @Query("size") size: Int = 10,
+        @Query("page") page: Int? = 0,
+
+        ): List<MovieResponse>
+
+    @GET("/superapp/objects/searchbyAlias/{alias}")
+    suspend fun getTopRatedMovies(
+        @Path("alias") alias: String = topRated,
+        @Query("userSuperapp") userSuperapp: String = SuperApp,
+        @Query("userEmail") userEmail: String = "test@example.com",
+        @Query("size") size: Int = 10,
+        @Query("page") page: Int? = 0,
+
+        ): List<MovieResponse>
+
+
+    @POST("/superapp/miniapp/{miniAppName}")
+    suspend fun addToFavorite(
+        @Path("miniAppName") miniAppName: String = addToFavorite,
+        @Body value: CommandRequest,
+    )
+
+    @POST("/superapp/miniapp/{miniAppName}")
+    suspend fun removeFromFavorite(
+        @Path("miniAppName") miniAppName: String = removeFromFavorite,
+        @Body value: CommandRequest,
+    )
+
+    @POST("/superapp/miniapp/{miniAppName}")
+    suspend fun getAllFavorite(
+        @Path("miniAppName") miniAppName: String = getAllFavorite,
+        @Body value: CommandRequest,
+    ): List<MovieResponse>?
+
+
+    @POST("/superapp/miniapp/{miniAppName}")
+    suspend fun addToWish(
+        @Path("miniAppName") miniAppName: String = addToWishlist,
+        @Body value: CommandRequest,
+    )
+
+    @POST("/superapp/miniapp/{miniAppName}")
+    suspend fun removeFromWish(
+        @Path("miniAppName") miniAppName: String = removeFromWishlist,
+        @Body value: CommandRequest,
+    )
+
+    @POST("/superapp/miniapp/{miniAppName}")
+    suspend fun getAllWish(
+        @Path("miniAppName") miniAppName: String = getAllWishlist,
+        @Body value: CommandRequest,
+    ): List<MovieResponse>?
 
 
 
 }
 
+
 const val SuperApp = "2023.ohad.saada"
+const val upcoming = "upcoming"
+const val nowPlaying = "nowPlaying"
+
+const val addToFavorite = "addToFavorite"
+const val removeFromFavorite = "removeFromFavorite"
+const val getAllFavorite = "getAllFavorite"
+
+const val addToWishlist = "addToWishlist"
+const val removeFromWishlist = "removeFromWishlist"
+const val getAllWishlist = "getAllWishlist"
+
+const val topRated = "topRated"
+const val movie = "upcoming"
 
 
+/*************************
+ * superapp/miniapp/{miniAppName} = AddToWatchList
+{
+"targetObject": {
+"objectId": {
+"superApp": "2023.ohad.saada",
+"internalObjectId": "1"
+}
+},
+"invokedBy": {
+"userId": {
+"superapp": "2023.ohad.saada",
+"email": "test@example.com"
+}
+}
+}
 
-
-/***************************
-    end points:
-    https://api.spacexdata.com/v4/ships
-    https://api.spacexdata.com/v5/launches
+kotlin Command object :
+CommandRequest(
+targetObject =
+TargetObject(
+objectId = ObjectId(
+superApp = "2023.ohad.saada",
+internalObjectId = "12")
+),
+invokedBy =
+InvokedBy(
+userId = UserId(
+superapp = "2023.ohad.saada",
+email = "ohad@ohad.com"
+)
+)
+),
  **************************/

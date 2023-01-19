@@ -19,7 +19,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.integrativit_client.R
 import com.example.integrativit_client.ui.theme.MyColors
-import com.example.integrativit_client.ui.theme.generic.DrawableImage
 import com.example.integrativit_client.ui.theme.generic.MyText
 import com.example.integrativit_client.ui.theme.generic.OutlineTextField
 

@@ -1,7 +1,7 @@
 package com.example.integrativit_client.di
 
 import com.example.integrativit_client.BuildConfig
-import com.example.integrativit_client.network.MoviesAPi
+import com.example.integrativit_client.network.MoviesApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -45,13 +45,14 @@ object NetworkModule {
         gsonConverterFactory: Converter.Factory
     ): Retrofit = Retrofit.Builder()
         .client(httpClient)
+        //current base url of docker .. maybe different in other computer
         .baseUrl("http://10.0.2.2:8085/")
         .addConverterFactory(gsonConverterFactory)
         .build()
 
 
     @Provides
-    fun provideMoviesApi(retrofit: Retrofit): MoviesAPi = retrofit.create(MoviesAPi::class.java)
+    fun provideMoviesApi(retrofit: Retrofit): MoviesApi = retrofit.create(MoviesApi::class.java)
 
 
 

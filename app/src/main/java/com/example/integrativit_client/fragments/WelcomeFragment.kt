@@ -19,8 +19,8 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class WelcomeFragment : Fragment(R.layout.fragment_welcome) {
-    private val viewModel: MainViewModel by activityViewModels()
 
+    private val viewModel: MainViewModel by activityViewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

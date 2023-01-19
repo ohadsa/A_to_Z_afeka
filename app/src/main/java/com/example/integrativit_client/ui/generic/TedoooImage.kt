@@ -1,4 +1,4 @@
-package com.example.integrativit_client.ui.theme.generic
+package com.example.integrativit_client.ui.generic
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image

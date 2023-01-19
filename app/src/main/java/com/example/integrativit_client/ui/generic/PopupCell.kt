@@ -9,11 +9,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.integrativit_client.ui.theme.MyColors
-import com.example.integrativit_client.ui.theme.generic.DrawableImage
 import com.example.integrativit_client.ui.theme.generic.MyText
 import com.example.integrativit_client.R
 @Composable
@@ -44,8 +42,7 @@ fun PopupCell(
                         .background(
                             brush = Brush.verticalGradient(
                                 colors = listOf(
-                                    MyColors.indigoPrimary,
-                                    MyColors.indigo25,
+                                    MyColors.indigoDark,
                                     Color.White,
                                 )
                             )
@@ -81,7 +78,7 @@ fun PopupCell(
                         .fillMaxWidth(),
                     variant = ButtonVariant.Secondary,
                     text = stringResource(id = R.string.edit),
-                    onClick = { onButton() }
+                    onClick = { onBack() }
                 )
                 Spacer(Modifier.height(36.dp))
             }

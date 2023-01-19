@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.integrativit_client.ui.theme.MyColors
-import com.example.integrativit_client.ui.theme.generic.DrawableImage
 import com.example.integrativit_client.ui.theme.generic.MyText
 
 const val emptyString = ""

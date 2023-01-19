@@ -8,7 +8,7 @@ data class MyUser(
     val username: String = "",
     val email: String = "",
     val avatar: String = "",
-    val role: UserRole = UserRole.MINIAPP_USER,
+    val role: UserRole = UserRole.SUPERAPP_USER,
 ):Parcelable {
     fun allFilled(): Boolean {
         return username.isNotEmpty() && email.isNotEmpty() && avatar.isNotEmpty()

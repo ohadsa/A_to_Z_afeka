@@ -2,18 +2,29 @@ package com.example.integrativit_client
 
 import android.os.Bundle
 import android.view.MotionEvent
+import androidx.activity.viewModels
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.fragment.app.FragmentActivity
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.paging.map
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import net.yslibrary.android.keyboardvisibilityevent.util.UIUtil
 
 
 @AndroidEntryPoint
-class MainActivity : FragmentActivity()  {
+class MainActivity : FragmentActivity() {
+
+
+
+    private val viewModel: MainViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
     }
 
 
@@ -36,9 +47,6 @@ class MainActivity : FragmentActivity()  {
     }
 
 }
-
-
-
 
 
 @Composable

@@ -1,24 +1,26 @@
 package com.example.integrativit_client.models
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
+
+@Parcelize
 data class UserResponse(
-    val role: UserRole,
-    val avatar: String,
-    val userName: String,
-    val userId: UserId,
-    val createdAt: String,
-    val details: UserDetails,
-)
+    val userName: String ="",
+    val avatar: String ="",
+    val role: UserRole = UserRole.SUPERAPP_USER,
+    val details: UserDetails = UserDetails(),
+):Parcelable
 
+
+@Parcelize
 data class UserDetails(
-    val wishList: List<String>,
-    val favorite: List<String>,
-    val watched: List<String>,
-)
+    val wishList: List<String> = emptyList(),
+    val favorite: List<String> = emptyList(),
+    val watched: List<String> = emptyList(),
+):Parcelable
 
-data class UserId(
-    val superapp: String,
-    val email: String,
-)
+
 
 /*
 {

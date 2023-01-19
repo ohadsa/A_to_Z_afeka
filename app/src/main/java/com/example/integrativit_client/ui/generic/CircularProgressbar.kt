@@ -24,24 +24,22 @@ import com.example.integrativit_client.ui.theme.generic.MyText
 fun CircularProgressbar(
     modifier: Modifier = Modifier,
     number: Float = 70f,
-    font: MyFont = MyFont(Bold, 14.sp, FontName.Poppins),
+    font: MyFont = MyFont(Bold, 12.sp, FontName.Poppins),
     textColor: Color = MyColors.darkGray,
     size: Dp = 60.dp,
     indicatorThickness: Dp = 6.dp,
     animationDuration: Int = 0,
     animationDelay: Int = 0,
+    start: Boolean = false,
     foregroundIndicatorColor: Color = MyColors.main,
     backgroundIndicatorColor: Color = MyColors.main.copy(alpha = 0.1f)
 ) {
 
     // It remembers the number value
-    var numberR by remember {
-        mutableStateOf(0f)
-    }
 
     // Number Animation
     val animateNumber = animateFloatAsState(
-        targetValue = numberR,
+        targetValue = number,
         animationSpec = tween(
             durationMillis = animationDuration,
             delayMillis = animationDelay
@@ -49,9 +47,7 @@ fun CircularProgressbar(
     )
 
     // This is to start the animation when the activity is opened
-    LaunchedEffect(Unit) {
-        numberR = number
-    }
+
 
     Box(
         contentAlignment = Alignment.Center,
@@ -86,13 +82,11 @@ fun CircularProgressbar(
         Box(
             Modifier
                 .align(Alignment.Center)
-                .padding(3.dp)
                 .fillMaxSize()
-                .background(Color.White, CircleShape),
+                .background(MyColors.main10, CircleShape),
         ) {
             MyText(
                 modifier = Modifier
-                    .padding(top = 3.dp)
                     .align(Alignment.Center),
                 text = (animateNumber.value).toInt().toString().formatToPercent(),
                 font = font,
