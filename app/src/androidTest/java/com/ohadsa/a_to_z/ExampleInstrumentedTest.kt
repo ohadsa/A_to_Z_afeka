@@ -1,4 +1,4 @@
-package com.ohadsa.integrativit
+package com.ohadsa.a_to_z
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

@@ -1,4 +1,4 @@
-package com.ohadsa.integrativit
+package com.ohadsa.a_to_z
 
 import android.os.Bundle
 import android.view.MotionEvent
@@ -7,7 +7,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.fragment.app.FragmentActivity
 import com.example.integrativit_client.MainViewModel
-import com.ohadsa.a_to_z.R
 import dagger.hilt.android.AndroidEntryPoint
 import net.yslibrary.android.keyboardvisibilityevent.util.UIUtil
 

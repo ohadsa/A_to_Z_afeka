@@ -1,4 +1,4 @@
-package com.ohadsa.integrativit
+package com.ohadsa.a_to_z
 
 import org.junit.Test
 
