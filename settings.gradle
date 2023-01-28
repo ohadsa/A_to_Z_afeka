@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 
 }
-rootProject.name = "IntegrativitClient"
+rootProject.name = "A-to-Z"
 include ':app'

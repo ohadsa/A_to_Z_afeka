@@ -1,7 +1,0 @@
-package com.example.integrativit_client
-
-import android.app.Application
-import dagger.hilt.android.HiltAndroidApp
-
-@HiltAndroidApp
-class MainApp: Application()

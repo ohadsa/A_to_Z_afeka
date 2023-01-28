@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace 'com.example.integrativit_client'
+    namespace 'com.ohadsa.a_to_z'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.example.integrativit_client"
+        applicationId "com.ohadsa.a_to_z"
         minSdk 21
         targetSdk 33
         versionCode 1
@@ -53,9 +53,7 @@ android {
 dependencies {
 
     def retrofit_version = "2.9.0"
-    def room_version = "2.4.2"
     def nav_version = "2.5.0"
-    def lifecycle_extension_version = '2.5.0'
 
 
     implementation "com.google.accompanist:accompanist-placeholder:0.27.0"
@@ -146,12 +144,12 @@ dependencies {
     // okhttp:
     implementation 'com.squareup.okhttp3:logging-interceptor:4.10.0'
 
-    implementation 'androidx.core:core-ktx:1.8.0'
-    implementation 'androidx.appcompat:appcompat:1.4.2'
-    implementation 'com.google.android.material:material:1.6.1'
+    implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'androidx.appcompat:appcompat:1.6.0'
+    implementation 'com.google.android.material:material:1.7.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
-    implementation 'com.google.android.exoplayer:exoplayer:2.16.1'
+    implementation 'com.google.android.exoplayer:exoplayer:2.18.2'
 
 }
