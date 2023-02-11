@@ -8,7 +8,6 @@ import kotlinx.parcelize.Parcelize
 data class UserResponse(
     val userName: String ="",
     val avatar: String ="",
-    val role: UserRole = UserRole.SUPERAPP_USER,
     val details: UserDetails = UserDetails(),
 ):Parcelable
 

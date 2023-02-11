@@ -13,13 +13,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.ohadsa.a_to_z.ui.theme.MyColors
 import com.ohadsa.a_to_z.R
+
 @Composable
 fun PopupCell(
-    drawable :Int,
+    drawable: Int,
     onButton: () -> Unit,
-    buttonText:String,
-    title:String,
-    text:String,
+    buttonText: String,
+    title: String,
+    text: String,
     onBack: () -> Unit,
 ) {
     Box(Modifier
@@ -29,7 +30,7 @@ fun PopupCell(
         Box(Modifier
             .width(335.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(Color.White,RoundedCornerShape(8.dp))
+            .background(Color.White, RoundedCornerShape(8.dp))
             .align(Alignment.Center)) {
             Column(modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally) {
@@ -49,7 +50,7 @@ fun PopupCell(
                 )
                 MyText(
                     modifier = Modifier.padding(horizontal = 12.dp),
-                    text = title ,
+                    text = title,
                     font = MyFont.Heading5,
                     lineHeight = MyFont.Heading5.lineHeight,
                     color = MyColors.darkGray)
@@ -81,6 +82,27 @@ fun PopupCell(
                 )
                 Spacer(Modifier.height(36.dp))
             }
+        }
+    }
+}
+
+@Composable
+fun GenericPopup(
+    onBack: () -> Unit,
+    content : @Composable ()->Unit
+) {
+    Box(Modifier
+        .clickableNoFeedback { onBack() }
+        .fillMaxSize()
+        .background(Color.Transparent.copy(alpha = 0.5f))) {
+        Box(Modifier
+            .fillMaxWidth(0.8f)
+            .fillMaxHeight(0.6f)
+            .clip(RoundedCornerShape(8.dp))
+            .clickableNoFeedback {  }
+            .background(Color.White, RoundedCornerShape(8.dp))
+            .align(Alignment.Center)) {
+            content()
         }
     }
 }

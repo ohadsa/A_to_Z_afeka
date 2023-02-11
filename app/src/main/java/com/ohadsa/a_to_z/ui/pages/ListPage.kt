@@ -12,22 +12,21 @@ import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemsIndexed
-import com.example.integrativit_client.MainViewModel
+import com.example.integrativit_client.ui.generic.CostumeDivider
+import com.ohadsa.a_to_z.MainViewModel
 import com.ohadsa.a_to_z.R
-import com.ohadsa.a_to_z.models.MovieResponse
+import com.ohadsa.a_to_z.fragments.BuyCreditScreen
+import com.ohadsa.a_to_z.models.Movie
 import com.ohadsa.a_to_z.ui.custome.MovieItem
 import com.ohadsa.a_to_z.ui.custome.MoviePage
-import com.ohadsa.a_to_z.ui.generic.CircularProgressbar
-import com.ohadsa.a_to_z.ui.generic.ClickableTopBar
-import com.ohadsa.a_to_z.ui.generic.DrawableImage
-import com.ohadsa.a_to_z.ui.generic.MyFont
+import com.ohadsa.a_to_z.ui.generic.*
 import com.ohadsa.a_to_z.ui.theme.MyColors
-import com.ohadsa.a_to_z.ui.generic.MyText
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun ListPage(
+    modifier: Modifier,
     viewModel: MainViewModel,
     onBack: () -> Unit,
 ) {
@@ -36,8 +35,15 @@ fun ListPage(
     val myWishList by viewModel.myWishList.collectAsState()
     val myFavorite by viewModel.myFavorite.collectAsState()
 
+    val favIds by viewModel.favIds.collectAsState()
+    val premium by viewModel.isPremium.collectAsState()
+    val wishIds by viewModel.wishIds.collectAsState()
+
     var curItem by remember {
-        mutableStateOf(MovieResponse())
+        mutableStateOf(Movie())
+    }
+    var openBuyPopup by remember {
+        mutableStateOf(false)
     }
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(
@@ -50,6 +56,7 @@ fun ListPage(
             if (show) sheetState.show()
             else sheetState.hide()
         }
+
     ModalBottomSheetLayout(
         sheetShape = MaterialTheme.shapes.large.copy(
             topStart = CornerSize(12.dp), topEnd = CornerSize(12.dp)
@@ -57,67 +64,96 @@ fun ListPage(
         sheetState = sheetState,
         sheetContent = {
             MoviePage(
+                modifier = Modifier,
+                premium=premium,
                 curItem = curItem,
-                isItemInFavorite = myFavorite.contains(curItem),
-                isItemInWish = myWishList.contains(curItem),
+                isItemInFavorite = favIds.contains(curItem.id),
+                isItemInWish = wishIds.contains(curItem.id),
                 onAddToWishListTapped = { movie ->
-                    viewModel.WishListButtonTapped(movie)
+                    viewModel.wishListButtonTapped(movie) {
+                        openBuyPopup = true
+                    }
                 },
                 onAddToFavoriteTapped = { movie ->
-                    viewModel.favoriteButtonTapped(movie)
-                }
+                    viewModel.favoriteButtonTapped(movie) {
+                        openBuyPopup = true
+                    }
+                },
             )
         },
     ) {
-        ClickableTopBar(leftId = R.drawable.left_arrow, left = null, onLeft = onBack)
+        Column (modifier){
+            ClickableTopBar(leftId = R.drawable.right_arrow,
+                middle = curList.text,
+                left = null,
+                onLeft = onBack)
+            CostumeDivider(color = MyColors.gray50, modifier = Modifier.padding(top = 16.dp))
+            when (curList) {
+                ListType.Fav -> {
+                    ListMovieCell(myFavorite,favIds,wishIds) {
+                        curItem = it
+                        showSheet(true)
+                    }
+                }
+                ListType.Wish -> {
+                    ListMovieCell(myWishList,favIds,wishIds) {
+                        curItem = it
+                        showSheet(true)
+                    }
+                }
 
-        when (curList) {
-            ListType.Fav -> {
-
-                ListMovieCell(title = curList.text, myFavorite) {
-                    curItem = it
-                    showSheet(true)
+                ListType.Up -> {
+                    val list = viewModel.upcoming.collectAsLazyPagingItems()
+                    PagingMovieListCell(
+                        list,
+                        favIds,
+                        wishIds,
+                    ) {
+                        curItem = it
+                        showSheet(true)
+                    }
+                }
+                ListType.Top -> {
+                    val list = viewModel.topRated.collectAsLazyPagingItems()
+                    PagingMovieListCell(
+                        list,
+                        favIds,
+                        wishIds,
+                    ) {
+                        curItem = it
+                        showSheet(true)
+                    }
+                }
+                ListType.Today -> {
+                    val list = viewModel.nowPlaying.collectAsLazyPagingItems()
+                    PagingMovieListCell(
+                        list,
+                        favIds,
+                        wishIds,
+                    ) {
+                        curItem = it
+                        showSheet(true)
+                    }
                 }
             }
-            ListType.Wish -> {
-                val myWishList by viewModel.myWishList.collectAsState()
-                ListMovieCell(title = curList.text, myWishList) {
-                    curItem = it
-                    showSheet(true)
+        }
+        if (openBuyPopup) {
+            AnimatedDialog {
+                BuyCreditScreen(onBack = {  openBuyPopup = false }){
+                    viewModel.buyCreditTapped(it)
+                    openBuyPopup = false
                 }
             }
-
-            ListType.Up ->{
-                val list = viewModel.upcoming.collectAsLazyPagingItems()
-                PagingMovieListCell(title = curList.text, list) {
-                    curItem = it
-                    showSheet(true)
-                }
-            }
-            ListType.Top ->{
-                val list = viewModel.topRated.collectAsLazyPagingItems()
-                PagingMovieListCell(title = curList.text, list) {
-                    curItem = it
-                    showSheet(true)
-                }
-            }
-            ListType.Today -> {
-                val list = viewModel.nowPlaying.collectAsLazyPagingItems()
-                PagingMovieListCell(title = curList.text, list) {
-                    curItem = it
-                    showSheet(true)
-                }
-            }
-
         }
     }
 }
 
 @Composable
 fun PagingMovieListCell(
-    title: String,
-    list: LazyPagingItems<MovieResponse>,
-    onTapped: (MovieResponse) -> Unit,
+    list: LazyPagingItems<Movie>,
+    favIds: List<Long>,
+    wishIds: List<Long>,
+    onTapped: (Movie) -> Unit,
 ) {
     LazyColumn {
         item {
@@ -132,42 +168,28 @@ fun PagingMovieListCell(
                 )
             }
         }
-        item {
-            Spacer(modifier = Modifier.height(24.dp))
-            Box(modifier = Modifier.fillMaxWidth()) {
-                MyText(
-                    modifier = Modifier.align(Alignment.Center),
-                    text = title,
-                    font = MyFont.Heading4,
-                    color = MyColors.indigoPrimary,
-                    lineHeight = MyFont.Heading4.lineHeight
-                )
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-
-        }
-        itemsIndexed(list, { _, it -> it.objectId.internalObjectId })
+        itemsIndexed(list, { _, it -> it.id })
         { index, item ->
-            if (item != null ) {
+            if (item != null) {
                 Box {
                     Column {
                         MovieItem(modifier = Modifier
                             .height(240.dp)
                             .fillMaxWidth(),
-                            item.objectDetails?.backdrop_path?.toPath()?:"",
-                            item.objectDetails?.isFavorite?:false
+                            item.backdropPath?.toPath() ?: "",
+                            favIds.contains(item.id)
                         ) {
                             onTapped(item)
                         }
                         MyText(
                             modifier = Modifier.padding(start = 12.dp),
-                            text = item.objectDetails?.title?:"",
+                            text = item.name ?: "",
                             font = MyFont.Body14Italic,
                             color = MyColors.indigoDark)
                         Spacer(modifier = Modifier.height(24.dp))
                     }
                     CircularProgressbar(
-                        number = (item.objectDetails?.vote_average?.toFloat()?:9f) * 10,
+                        number = (item.voteAverage.toFloat() ?: 9f) * 10,
                         size = 32.dp,
                         indicatorThickness = 8.dp,
                         modifier = Modifier
@@ -181,9 +203,10 @@ fun PagingMovieListCell(
 
 @Composable
 fun ListMovieCell(
-    title: String,
-    list: List<MovieResponse>,
-    onTapped: (MovieResponse) -> Unit,
+    list: List<Movie>,
+    favIds: List<Long>,
+    wishIds: List<Long>,
+    onTapped: (Movie) -> Unit,
 ) {
     LazyColumn {
         item {
@@ -198,42 +221,29 @@ fun ListMovieCell(
                 )
             }
         }
-        item {
-            Spacer(modifier = Modifier.height(24.dp))
-            Box(modifier = Modifier.fillMaxWidth()) {
-                MyText(
-                    modifier = Modifier.align(Alignment.Center),
-                    text = title,
-                    font = MyFont.Heading4,
-                    color = MyColors.indigoPrimary,
-                    lineHeight = MyFont.Heading4.lineHeight
-                )
-            }
-            Spacer(modifier = Modifier.height(12.dp))
 
-        }
-        itemsIndexed(list, { _, it -> it.objectId.internalObjectId })
+        itemsIndexed(list, { _, it -> it.id })
         { index, item ->
             Box {
                 Column {
                     MovieItem(modifier = Modifier
                         .height(240.dp)
                         .fillMaxWidth(),
-                        item.objectDetails?.backdrop_path?.toPath()?:"",
-                        item.objectDetails?.isFavorite?:false
+                        item.backdropPath?.toPath() ?: "",
+                       favIds.contains(item.id)
                     ) {
                         onTapped(item)
 
                     }
                     MyText(
                         modifier = Modifier.padding(start = 12.dp),
-                        text = item.objectDetails?.title?:"",
+                        text = item.name ?: "",
                         font = MyFont.Body14Italic,
                         color = MyColors.indigoDark)
                     Spacer(modifier = Modifier.height(24.dp))
                 }
                 CircularProgressbar(
-                    number = (item.objectDetails?.vote_average?.toFloat()?:9f) * 10,
+                    number = (item.voteAverage.toFloat() ?: 9f) * 10,
                     size = 32.dp,
                     indicatorThickness = 8.dp,
                     modifier = Modifier

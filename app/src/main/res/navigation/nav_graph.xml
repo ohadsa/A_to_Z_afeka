@@ -3,39 +3,32 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/welcomeFragment">
+    app:startDestination="@id/gameFragment">
 
-
-
-    <action
-        android:id="@+id/action_to_gameFragment"
-        app:popUpTo="@id/welcomeFragment"
-        app:popUpToInclusive="true"
-        app:destination="@id/gameFragment" />
-
-    <action
-        android:id="@+id/action_to_welcomeFragment"
-        app:destination="@id/welcomeFragment" />
 
     <action
         android:id="@+id/action_to_blank"
         app:destination="@id/blankFragment" />
 
+    <action
+        android:id="@+id/action_to_search"
+        app:destination="@id/searchFragment" />
+
     <fragment
         android:id="@+id/gameFragment"
-        android:name="com.ohadsa.a_to_z.fragments.GameFragment"
+        android:name="com.ohadsa.a_to_z.fragments.HomeFragment"
         android:label="fragment_welcome"
-        tools:layout="@layout/fragment_game" />
-    <fragment
-        android:id="@+id/welcomeFragment"
-        android:name="com.ohadsa.a_to_z.fragments.WelcomeFragment"
-        android:label="fragment_game"
-        tools:layout="@layout/fragment_welcome" />
+        tools:layout="@layout/fragment_home" />
     <fragment
         android:id="@+id/blankFragment"
-        android:name="com.ohadsa.a_to_z.fragments.BlankFragment"
+        android:name="com.ohadsa.a_to_z.fragments.ListFragment"
         android:label="fragment_blank"
-        tools:layout="@layout/fragment_blank" />
+        tools:layout="@layout/fragment_list" />
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.ohadsa.a_to_z.fragments.SearchFragment"
+        android:label="fragment_search"
+        tools:layout="@layout/fragment_search" />
 
 
 </navigation>

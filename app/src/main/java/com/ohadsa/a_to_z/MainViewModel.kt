@@ -1,9 +1,5 @@
-package com.example.integrativit_client
+package com.ohadsa.a_to_z
 
-import CommandRequest
-import InvokedBy
-import TargetObject
-import UserId
 import android.content.SharedPreferences
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -12,100 +8,105 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import com.ohadsa.a_to_z.network.MoviesApi
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.ChildEventListener
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.ohadsa.a_to_z.fragments.BuyCreditPlan
 import com.ohadsa.a_to_z.network.MoviesPagingSource
 import com.ohadsa.a_to_z.ui.pages.ListType
-import com.google.gson.Gson
-import com.ohadsa.a_to_z.models.MovieResponse
-import com.ohadsa.a_to_z.models.MyUser
-import com.ohadsa.a_to_z.models.ObjectId
-import com.ohadsa.a_to_z.models.UserResponse
+import com.ohadsa.a_to_z.models.*
+import com.ohadsa.a_to_z.network.RemoteApi
+import com.ohadsa.a_to_z.network.SearchPagingSource
+import com.ohadsa.a_to_z.ui.pages.PremiumPlan
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.*
 import javax.inject.Inject
-
-const val USER_TAG = "com.integrative.user.tag"
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
     arguments: SavedStateHandle,
+    private val auth: FirebaseAuth,
     private val sharedPreferences: SharedPreferences,
-    private val moviesApi: MoviesApi,
+    private val repo: RemoteApi,
+    private val realTimeDB: FirebaseDatabase,
+) : ViewModel() {
 
-    ) : ViewModel() {
-
-    val myUser = MutableStateFlow(MyUser())
-    val userResponse = MutableStateFlow(UserResponse())
-
-
-    var nowPlayingSource: MoviesPagingSource? = null
+    private val myUserId = auth.currentUser?.uid
+    val userData = MutableStateFlow(MyUser())
+    private var nowPlayingSource: MoviesPagingSource? = null
     var topRatedSource: MoviesPagingSource? = null
     var upcomingSource: MoviesPagingSource? = null
+    var querySource: MoviesPagingSource? = null
+    val query = MutableStateFlow("")
 
 
-    val upcoming: Flow<PagingData<MovieResponse>> =
+    val queryMovies: Flow<PagingData<Movie>> =
         Pager(PagingConfig(pageSize = 10, enablePlaceholders = true)) {
             MoviesPagingSource(
                 fetchFunc = { page ->
-                    moviesApi.getUpcomingMovies(page = page,
-                        userEmail = myUser.value.email,
-                        size = 10)
+                    repo.searchMovies(page ?: 1, query.value)
                 },
-                favIds = favIds.value,
-                wishIds = wishIds.value
+            ).also { querySource = it }
+        }.flow.cachedIn(viewModelScope)
+
+    val upcoming: Flow<PagingData<Movie>> =
+        Pager(PagingConfig(pageSize = 10, enablePlaceholders = true)) {
+            MoviesPagingSource(
+                fetchFunc = { page ->
+                    repo.upComingMovies(page ?: 1)
+                },
             ).also { upcomingSource = it }
         }.flow.cachedIn(viewModelScope)
 
 
-    val nowPlaying: Flow<PagingData<MovieResponse>> =
+    val nowPlaying: Flow<PagingData<Movie>> =
         Pager(PagingConfig(pageSize = 10, enablePlaceholders = true)) {
             MoviesPagingSource(
                 fetchFunc = { page ->
-                    moviesApi.getNowPlayingMovies(page = page,
-                        userEmail = myUser.value.email,
-                        size = 10)
+                    repo.latestMovies(page ?: 1)
                 },
-                favIds = favIds.value,
-                wishIds = wishIds.value
             ).also { nowPlayingSource = it }
         }.flow.cachedIn(viewModelScope)
 
-    val topRated: Flow<PagingData<MovieResponse>> =
+    val topRated: Flow<PagingData<Movie>> =
         Pager(PagingConfig(pageSize = 10, enablePlaceholders = true)) {
             MoviesPagingSource(
                 fetchFunc = { page ->
-                    moviesApi.getTopRatedMovies(page = page,
-                        userEmail = myUser.value.email,
-                        size = 10)
+                    repo.topRatedMovies(page = page ?: 1)
                 },
-                favIds = favIds.value,
-                wishIds = wishIds.value
             ).also { topRatedSource = it }
         }.flow.cachedIn(viewModelScope)
 
-    private val favIds = MutableStateFlow(listOf<String>())
-    private val wishIds = MutableStateFlow(listOf<String>())
+    val favIds = MutableStateFlow(listOf<Long>())
+    val wishIds = MutableStateFlow(listOf<Long>())
 
-    val myWishList = MutableStateFlow(listOf<MovieResponse>())
-    val myFavorite = MutableStateFlow(listOf<MovieResponse>())
+    val myWishList = MutableStateFlow(listOf<Movie>())
+    val myFavorite = MutableStateFlow(listOf<Movie>())
+    val isPremium: StateFlow<Boolean> = userData
+        .map { (((it.premium)) > Date().time) }
+        .stateIn(viewModelScope, SharingStarted.Lazily, false)
+
 
     fun initPage() {
-        getUser()
         try {
             updateWishList()
             updateFavoriteList()
-        } catch (e: java.lang.Exception) { }
+        } catch (e: java.lang.Exception) {
+        }
         viewModelScope.launch {
             myFavorite.collect { list ->
-                favIds.value = list.map { it.objectId.internalObjectId }
+                favIds.value = list.map { it.id }
                 invalidateAll()
             }
         }
         viewModelScope.launch {
             favIds.collect {
                 invalidateAll()
-
             }
         }
         viewModelScope.launch {
@@ -116,186 +117,212 @@ class MainViewModel @Inject constructor(
 
         viewModelScope.launch {
             myWishList.collect { list ->
-                wishIds.value = list.map { it.objectId.internalObjectId }
+                wishIds.value = list.map { it.id }
                 invalidateAll()
             }
         }
     }
 
+    private fun initUser() {
+        myUserId?.let {
+            realTimeDB.getReference("users").child(myUserId)
+                .addValueEventListener(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        userData.value = MyUser(
+                            avatar = snapshot.child("avatar").getValue(String::class.java) ?: "",
+                            favoriteCredit = snapshot.child("favoriteCredit")
+                                .getValue(Int::class.java) ?: 0,
+                            wishCredit = snapshot.child("wishCredit").getValue(Int::class.java)
+                                ?: 0,
+                            username = snapshot.child("username").getValue(String::class.java)
+                                ?: "",
+                            premium = snapshot.child("premium").getValue(Long::class.java)
+                                ?: -1
+                        )
+                    }
+
+                    override fun onCancelled(error: DatabaseError) = Unit
+                })
+        }
+    }
+
+
+    private fun updateWishList() {
+        myUserId?.let {
+            realTimeDB.getReference("users").child(myUserId).child(WISH_TAG)
+                .addChildEventListener(object : ChildEventListener {
+                    override fun onChildAdded(snap: DataSnapshot, prev: String?) {
+                        snap.key?.let { key ->
+                            if (!wishIds.value.contains(snap.key?.toLong()))
+                                wishIds.value = wishIds.value + key.toLong()
+                        }
+
+                    }
+
+                    override fun onChildRemoved(snapshot: DataSnapshot) {
+                        snapshot.key?.let { key ->
+                            if (wishIds.value.contains(snapshot.key?.toLong()))
+                                wishIds.value = wishIds.value - key.toLong()
+                        }
+                    }
+
+                    override fun onChildChanged(snap: DataSnapshot, prev: String?) = Unit
+                    override fun onChildMoved(snap: DataSnapshot, prev: String?) = Unit
+                    override fun onCancelled(error: DatabaseError) = Unit
+                })
+        }
+    }
+
     var curList = MutableStateFlow(ListType.Up)
 
-    fun updateUser(newUser: MyUser) {
-        myUser.value = newUser
-    }
-
-    private fun addToFavorite(id: ObjectId) {
-        viewModelScope.launch {
-            try {
-                moviesApi.addToFavorite(
-                    value =
-                    CommandRequest(
-                        targetObject = TargetObject(objectId = id),
-                        invokedBy = InvokedBy(userId = UserId(email = myUser.value.email))
-                    )
-                )
-                updateFavoriteList()
-                favIds.value = myFavorite.value.map { it.objectId.internalObjectId }
-
-            } catch (e: java.lang.Exception) {
-            }
-        }
-    }
-
-    private fun addToWish(id: ObjectId) {
-        viewModelScope.launch {
-            try {
-                moviesApi.addToWish(
-                    value =
-                    CommandRequest(
-                        targetObject = TargetObject(objectId = id),
-                        invokedBy = InvokedBy(userId = UserId(email = myUser.value.email))
-                    )
-                )
-                updateWishList()
-                wishIds.value = myWishList.value.map { it.objectId.internalObjectId }
-            } catch (e: java.lang.Exception) {
-            }
-        }
-    }
-
-    private fun removeFromFavorite(id: ObjectId) {
-        viewModelScope.launch {
-            try {
-                moviesApi.removeFromFavorite(
-                    value =
-                    CommandRequest(
-                        targetObject = TargetObject(objectId = id),
-                        invokedBy = InvokedBy(userId = UserId(email = myUser.value.email))
-                    )
-                )
-                updateFavoriteList()
-                favIds.value = myFavorite.value.map { it.objectId.internalObjectId }
-            } catch (e: java.lang.Exception) {
-            }
-        }
-    }
-
-    init {
-        getUser()
-    }
-
-    private fun removeFromWish(id: ObjectId) {
-        viewModelScope.launch {
-            try {
-                moviesApi.removeFromWish(
-                    value =
-                    CommandRequest(
-                        targetObject = TargetObject(objectId = id),
-                        invokedBy = InvokedBy(userId = UserId(email = myUser.value.email))
-                    )
-                )
-                updateWishList()
-                wishIds.value = myWishList.value.map { it.objectId.internalObjectId }
-
-
-            } catch (e: java.lang.Exception) {
-            }
-        }
-    }
 
     private fun invalidateAll() {
         upcomingSource?.invalidate()
         topRatedSource?.invalidate()
         nowPlayingSource?.invalidate()
-        println("invalidate all ")
+        initUser()
     }
 
     private fun updateFavoriteList() {
-        viewModelScope.launch {
-            try {
-                myFavorite.emit(moviesApi.getAllFavorite(
-                    value =
-                    CommandRequest(
-                        targetObject = TargetObject(objectId = ObjectId()),
-                        invokedBy = InvokedBy(userId = UserId(email = myUser.value.email))
-                    )
-                )?.map { it.also { it.objectDetails?.isFavorite = true } } ?: listOf())
-                favIds.value = myFavorite.value.map { it.objectId.internalObjectId }
+        myUserId?.let {
+            realTimeDB.getReference("users").child(myUserId).child(FAV_TAG)
+                .addChildEventListener(object : ChildEventListener {
+                    override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+                        snapshot.key?.let { key ->
+                            if (!favIds.value.contains(snapshot.key?.toLong()))
+                                favIds.value = favIds.value + listOf(key.toLong())
+                        }
 
-            } catch (e: java.lang.Exception) {
+                    }
+
+                    override fun onChildChanged(
+                        snapshot: DataSnapshot,
+                        previousChildName: String?,
+                    ) = Unit
+
+                    override fun onChildRemoved(snapshot: DataSnapshot) {
+                        snapshot.key?.let { key ->
+                            if (favIds.value.contains(snapshot.key?.toLong()))
+                                favIds.value = favIds.value - key.toLong()
+                        }
+                    }
+
+                    override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) =
+                        Unit
+
+                    override fun onCancelled(error: DatabaseError) = Unit
+                })
+        }
+    }
+
+    init {
+        initUser()
+        getFavFromDB()
+        getWishFromDB()
+    }
+
+    private fun getWishFromDB() {
+        myUserId?.let {
+            realTimeDB.getReference("users").child(myUserId).child(WISH_TAG)
+                .addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        for (snap: DataSnapshot in snapshot.children) {
+                            snap.key?.let {
+                                viewModelScope.launch {
+                                    repo.movieById(it.toInt())?.let { movie ->
+                                        myWishList.value = myWishList.value + movie
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                    }
+                })
+        }
+    }
+
+    private fun getFavFromDB() {
+        myUserId?.let {
+            realTimeDB.getReference("users").child(it).child(FAV_TAG)
+                .addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        for (snap: DataSnapshot in snapshot.children) {
+                            snap.key?.let {
+                                viewModelScope.launch {
+                                    repo.movieById(it.toInt())?.let { movie ->
+                                        myFavorite.value = myFavorite.value + movie
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                    }
+                })
+        }
+    }
+
+
+    fun wishListButtonTapped(movie: Movie, runIfNoCredits: () -> Unit) {
+        myUserId?.let {
+            if (wishIds.value.contains(movie.id)) {
+                realTimeDB.getReference("users").child(myUserId).child(WISH_TAG)
+                    .child(movie.id.toString())
+                    .removeValue()
+                updateCreditsOnDB(userData.value.wishCredit + 1, userData.value.favoriteCredit)
+                myWishList.value = myWishList.value.filter { it.id != movie.id }
+                invalidateAll()
+
+            } else {
+                if (userData.value.wishCredit > 0) {
+                    realTimeDB.getReference("users").child(myUserId).child(WISH_TAG)
+                        .child(movie.id.toString())
+                        .setValue(true)
+                    updateCreditsOnDB(userData.value.wishCredit - 1, userData.value.favoriteCredit)
+                    myWishList.value = myWishList.value + movie
+                    invalidateAll()
+                } else {
+                    runIfNoCredits()
+                }
             }
+
+
         }
     }
 
-    private fun updateWishList() {
-        viewModelScope.launch {
-            try {
-                myWishList.emit(moviesApi.getAllWish(
-                    value =
-                    CommandRequest(
-                        targetObject = TargetObject(objectId = ObjectId()),
-                        invokedBy = InvokedBy(userId = UserId(email = myUser.value.email))
-                    )
-                )?.map { it.also { it.objectDetails?.isWish = true } } ?: listOf())
-                wishIds.value = myWishList.value.map { it.objectId.internalObjectId }
-            } catch (e: java.lang.Exception) {
+    private fun updateCreditsOnDB(wishCount: Int, favCount: Int) {
+        myUserId?.let {
+            realTimeDB.getReference("users").child(myUserId).child("favoriteCredit")
+                .setValue(favCount)
+            realTimeDB.getReference("users").child(myUserId).child("wishCredit")
+                .setValue(wishCount)
+        }
+    }
+
+    fun favoriteButtonTapped(movie: Movie, runIfNoCredits: () -> Unit) {
+        myUserId?.let {
+            if (favIds.value.contains(movie.id)) {
+                realTimeDB.getReference("users").child(myUserId).child(FAV_TAG)
+                    .child(movie.id.toString())
+                    .removeValue()
+                updateCreditsOnDB(userData.value.wishCredit, userData.value.favoriteCredit + 1)
+                myFavorite.value = myFavorite.value.filter { it.id != movie.id }
+                invalidateAll()
+            } else {
+                if (userData.value.favoriteCredit > 0) {
+                    realTimeDB.getReference("users").child(myUserId).child(FAV_TAG)
+                        .child(movie.id.toString())
+                        .setValue(true)
+                    updateCreditsOnDB(userData.value.wishCredit, userData.value.favoriteCredit - 1)
+                    myFavorite.value = myFavorite.value + movie
+                    invalidateAll()
+                } else {
+                    runIfNoCredits()
+                }
             }
-        }
-    }
-
-
-    fun saveUser() {
-        val gson = Gson()
-        val toSave =
-            gson.toJson(myUser.value, MyUser::class.java)
-        sharedPreferences.edit().putString(USER_TAG, toSave).apply()
-    }
-
-    fun getUser() {
-        val gson = Gson()
-        val temp = sharedPreferences.getString(USER_TAG, "")
-        myUser.value = gson.fromJson(temp, MyUser::class.java) ?: MyUser()
-    }
-
-    fun login(runWhenSuccess: () -> Unit, runWhenFailure: () -> Unit) {
-        viewModelScope.launch {
-            try {
-                userResponse.value = moviesApi.login(email = myUser.value.email) ?: UserResponse()
-                runWhenSuccess()
-
-            } catch (e: java.lang.Exception) {
-                runWhenFailure()
-            }
-        }
-        saveUser()
-    }
-
-    fun signUp() {
-        viewModelScope.launch {
-            try {
-                userResponse.value = moviesApi.signup(myUser.value)
-            } catch (e: java.lang.Exception) {
-            }
-        }
-    }
-
-    fun WishListButtonTapped(movie: MovieResponse) {
-        if (movie.objectDetails?.isWish == true) {
-            removeFromWish(movie.objectId)
-            movie.objectDetails.isWish = false
-        } else {
-            addToWish(movie.objectId)
-            movie.objectDetails?.isWish = true
-        }
-    }
-
-    fun favoriteButtonTapped(movie: MovieResponse) {
-        if (movie.objectDetails?.isFavorite == true) {
-            removeFromFavorite(movie.objectId)
-            movie.objectDetails.isFavorite = false
-        } else {
-            addToFavorite(movie.objectId)
-            movie.objectDetails?.isFavorite = true
         }
     }
 
@@ -303,8 +330,49 @@ class MainViewModel @Inject constructor(
         curList.value = type
     }
 
+    fun logoutTapped() {
+        auth.signOut()
+    }
 
+    fun goPremiumTapped(plan: PremiumPlan) {
+        myUserId?.let {
+            when (plan) {
+                PremiumPlan.TreeMonth -> realTimeDB.getReference("users").child(myUserId)
+                    .child("premium")
+                    .setValue(Date().time + 7.884e+9 /* 3 MONTH */)
+                PremiumPlan.OneMonth -> realTimeDB.getReference("users").child(myUserId)
+                    .child("premium")
+                    .setValue(Date().time + 2.628e+9/* 1 MONTH */)
+                PremiumPlan.OneYear -> realTimeDB.getReference("users").child(myUserId)
+                    .child("premium")
+                    .setValue(Date().time + 3.154e+10/* 1 YEAR */)
+            }
+        }
+
+
+    }
+
+    fun notifyQueryChanged(newValue: String) {
+        query.value = newValue
+        querySource?.invalidate()
+    }
+
+    fun buyCreditTapped(plan: BuyCreditPlan) {
+        myUserId?.let { id ->
+            val creditToAdd = when (plan) {
+                BuyCreditPlan.FiveCredits -> 5
+                BuyCreditPlan.TwentyCredits -> 20
+                BuyCreditPlan.HundredCredits -> 100
+            }
+            realTimeDB.getReference("users").child(id).child("favoriteCredit")
+                .setValue(userData.value.favoriteCredit + creditToAdd)
+            realTimeDB.getReference("users").child("wishCredit")
+                .setValue(userData.value.favoriteCredit + creditToAdd)
+        }
+    }
 }
 
+const val FAV_TAG = "favorites"
+const val WISH_TAG = "wish_list"
 
 

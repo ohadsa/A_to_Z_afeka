@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.example.integrativit_client.ui.generic.*
 import com.ohadsa.a_to_z.R
+import com.ohadsa.a_to_z.models.Movie
 import com.ohadsa.a_to_z.ui.generic.MyText
 import com.ohadsa.a_to_z.ui.generic.*
 
@@ -30,15 +31,18 @@ const val BASE_POSTER_IMAGE_URL = "https://image.tmdb.org/t/p/w500/"
 
 @Composable
 fun MoviePage(
-    curItem: MovieResponse,
+    modifier: Modifier,
+    curItem: Movie,
+    premium :Boolean,
     isItemInFavorite :Boolean,
     isItemInWish :Boolean,
-    onAddToFavoriteTapped: (MovieResponse) -> Unit,
-    onAddToWishListTapped: (MovieResponse) -> Unit,
+    onAddToFavoriteTapped: (Movie) -> Unit,
+    onAddToWishListTapped: (Movie) -> Unit,
 ) {
     Box {
         Column(
-            modifier = Modifier
+            modifier = modifier
+                .padding(bottom = if(premium) 0.dp else 60.dp)
                 .fillMaxWidth()
                 .fillMaxHeight(0.94f)
                 .verticalScroll(rememberScrollState())
@@ -62,7 +66,7 @@ fun MoviePage(
                 ) = createRefs()
 
                 ImageOrDefault(
-                    imageUrl = "$BASE_BACKDROP_IMAGE_URL${curItem.objectDetails?.backdrop_path}",
+                    imageUrl = "$BASE_BACKDROP_IMAGE_URL${curItem.backdropPath}",
                     modifier = Modifier
                         .fillMaxWidth()
                         .fillMaxHeight()
@@ -131,7 +135,7 @@ fun MoviePage(
                     }
 
                     Text(
-                        text = curItem.objectDetails?.title?:"",
+                        text = curItem.name,
                         modifier = Modifier
                             .padding(top = 2.dp, start = 4.dp, bottom = 4.dp)
                             .fillMaxWidth(0.5F),
@@ -142,7 +146,7 @@ fun MoviePage(
                     )
 
                     Text(
-                        text = curItem.objectDetails?.release_date?:"",
+                        text = curItem.releaseDate?:"",
                         modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.W500,
@@ -150,7 +154,7 @@ fun MoviePage(
                     )
 
                     CircularProgressbar(
-                        number = (curItem.objectDetails?.vote_average?.toFloat() ?: 9f ) * 10,
+                        number = (curItem.voteAverage.toFloat() ?: 9f ) * 10,
                         size = 28.dp,
                         indicatorThickness = 6.dp,
                         modifier = Modifier
@@ -159,7 +163,7 @@ fun MoviePage(
                 }
 
                 ImageOrDefault(
-                    imageUrl = "$BASE_POSTER_IMAGE_URL/${curItem.objectDetails?.poster_path}",
+                    imageUrl = "$BASE_POSTER_IMAGE_URL/${curItem.posterPath}",
                     modifier = Modifier
                         .padding(16.dp)
                         .clip(RoundedCornerShape(4.dp))
@@ -183,7 +187,7 @@ fun MoviePage(
                     }
                 ) {
                     MyText(
-                        text = curItem.objectDetails?.overview?:"",
+                        text = curItem.overview?:"",
                         overflow = TextOverflow.Ellipsis,
                         font = MyFont(weight = FontWeight.Normal,
                             textSize = 18.sp,
@@ -222,7 +226,7 @@ fun MoviePage(
                     onClick = { onAddToWishListTapped(curItem) })
             }
         }
-        if (curItem.objectDetails?.isFavorite == true) {
+        if (isItemInFavorite) {
             DrawableImage(
                 modifier = Modifier
                     .padding(24.dp)

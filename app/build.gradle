@@ -5,6 +5,9 @@ plugins {
     //-----Hilt-----
     id 'kotlin-kapt'
     id 'dagger.hilt.android.plugin'
+    id 'com.google.gms.google-services'
+    id 'com.google.firebase.crashlytics'
+
 }
 
 
@@ -54,6 +57,7 @@ android {
 
 dependencies {
 
+    implementation 'com.google.firebase:firebase-database-ktx:20.0.4'
     def retrofit_version = "2.9.0"
     def room_version = "2.4.2"
     def nav_version = "2.5.0"
@@ -155,5 +159,23 @@ dependencies {
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
     implementation 'com.google.android.exoplayer:exoplayer:2.16.1'
+
+    //firebase
+    implementation platform('com.google.firebase:firebase-bom:31.2.0')
+    implementation 'com.google.firebase:firebase-analytics-ktx'
+    implementation 'com.google.firebase:firebase-auth-ktx'
+
+    //firebase analytics
+    implementation 'com.google.firebase:firebase-crashlytics-ktx'
+    implementation 'com.google.firebase:firebase-analytics-ktx'
+
+    //html to component
+    implementation 'de.charlex.compose:html-text:1.3.1'
+
+    implementation 'com.google.android.gms:play-services-ads:21.5.0'
+
+    def billing_version = "5.1.0"
+    implementation "com.android.billingclient:billing:$billing_version"
+
 
 }

@@ -1,6 +1,8 @@
 package com.ohadsa.a_to_z.ui.generic
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -25,6 +27,8 @@ sealed class TextFieldState {
     object Loading : TextFieldState()
 }
 
+fun String.toDots() = this.map { '*' }.toString()
+
 @Composable
 fun CustomTextField(
     value: String,
@@ -37,6 +41,7 @@ fun CustomTextField(
     font: MyFont = MyFont.Body14,
     onFocus: (() -> Unit)? = null,
 ) {
+
     CustomTextField(
         value = value,
         onValueChanged = onValueChanged,
@@ -102,7 +107,7 @@ fun CustomTextField(
             (if (state is TextFieldState.Success) MyColors.success else MyColors.indigoPrimary)
         OutlinedTextField(
             keyboardOptions = keyboardOptions,
-            value = value,
+            value = if (passwordVisible || !isPassword) value else value.toDots(),
             colors = TextFieldDefaults.outlinedTextFieldColors(
                 focusedLabelColor = focusedColor,
                 focusedBorderColor = focusedColor,
@@ -120,7 +125,7 @@ fun CustomTextField(
             ),
             onValueChange = onValueChanged,
             enabled = enabled,
-            visualTransformation = if (isPassword && !passwordVisible) PasswordVisualTransformation() else VisualTransformation.None,
+            visualTransformation = if (passwordVisible || !isPassword) VisualTransformation.None else PasswordVisualTransformation(),
             label = {
                 MyText(
                     text = placeholder,
@@ -143,30 +148,41 @@ fun CustomTextField(
             maxLines = maxLines,
             isError = state is TextFieldState.Error,
             trailingIcon = {
-
-                when (state ) {
-                    is TextFieldState.Error -> {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_baseline_error_outline_24_red),
-                            contentDescription = "",
-                            colorFilter = ColorFilter.tint(MaterialTheme.colors.error)
-                        )
+                if (isPassword) {
+                    Image(
+                        painter = painterResource(id = if (passwordVisible) R.drawable.eye else R.drawable.eye_off),
+                        contentDescription = "",
+                        modifier = Modifier.clickable(interactionSource = remember {
+                            MutableInteractionSource()
+                        }, indication = null, onClick = {
+                            passwordVisible = !passwordVisible
+                        })
+                    )
+                } else {
+                    when (state) {
+                        is TextFieldState.Error -> {
+                            Image(
+                                painter = painterResource(id = R.drawable.ic_baseline_error_outline_24_red),
+                                contentDescription = "",
+                                colorFilter = ColorFilter.tint(MaterialTheme.colors.error)
+                            )
+                        }
+                        is TextFieldState.Success -> {
+                            Image(
+                                painter = painterResource(id = R.drawable.ic_baseline_check_24),
+                                contentDescription = "",
+                                colorFilter = ColorFilter.tint(MyColors.success)
+                            )
+                        }
+                        TextFieldState.Loading -> {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(14.dp),
+                                strokeWidth = 2.dp,
+                                color = MyColors.darkGray
+                            )
+                        }
+                        else -> Unit
                     }
-                    is TextFieldState.Success -> {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_baseline_check_24),
-                            contentDescription = "",
-                            colorFilter = ColorFilter.tint(MyColors.success)
-                        )
-                    }
-                    TextFieldState.Loading -> {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(14.dp),
-                            strokeWidth = 2.dp,
-                            color = MyColors.darkGray
-                        )
-                    }
-                    else -> Unit
                 }
             },
             singleLine = maxLines == 1,
@@ -211,9 +227,12 @@ fun CustomTextFieldWithErrorImage(
     font: MyFont = MyFont.Body14,
     onFocus: (() -> Unit)? = null,
 ) {
+    var passwordVisible by remember {
+        mutableStateOf(false)
+    }
 
     Column(modifier = modifier) {
-        val focusedColor =  MyColors.indigoPrimary
+        val focusedColor = MyColors.indigoPrimary
         OutlinedTextField(
             keyboardOptions = keyboardOptions,
             value = value,
@@ -226,19 +245,21 @@ fun CustomTextFieldWithErrorImage(
                 disabledTextColor = if (sameColorWhenDisable) LocalContentColor.current.copy(
                     LocalContentAlpha.current) else LocalContentColor.current.copy(LocalContentAlpha.current)
                     .copy(ContentAlpha.disabled),
-                disabledBorderColor = if (sameColorWhenDisable)  MyColors.gray10 else focusedColor.copy(
+
+                disabledBorderColor = if (sameColorWhenDisable) MyColors.gray10 else focusedColor.copy(
                     ContentAlpha.disabled),
                 disabledLabelColor = if (sameColorWhenDisable) MaterialTheme.colors.onSurface.copy(
                     ContentAlpha.medium) else MaterialTheme.colors.onSurface.copy(ContentAlpha.medium)
                     .copy(ContentAlpha.disabled)
             ),
+            visualTransformation = if (passwordVisible || !isPassword) VisualTransformation.None else PasswordVisualTransformation(),
             onValueChange = onValueChanged,
             enabled = enabled,
             label = {
                 MyText(
                     text = placeholder,
                     font = font,
-                    color =  Color.Unspecified
+                    color = Color.Unspecified
 
                 )
             },
@@ -252,29 +273,41 @@ fun CustomTextFieldWithErrorImage(
                 .onFocusChanged { if (it.isFocused) onFocus?.invoke() },
             maxLines = maxLines,
             trailingIcon = {
-                when (state ) {
-                    is TextFieldState.Error -> {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_baseline_error_outline_24_red),
-                            contentDescription = "",
-                            colorFilter = ColorFilter.tint(MaterialTheme.colors.error)
-                        )
+                if (isPassword) {
+                    Image(
+                        painter = painterResource(id = if (passwordVisible) R.drawable.eye else R.drawable.eye_off),
+                        contentDescription = "",
+                        modifier = Modifier.clickable(interactionSource = remember {
+                            MutableInteractionSource()
+                        }, indication = null, onClick = {
+                            passwordVisible = !passwordVisible
+                        })
+                    )
+                } else {
+                    when (state) {
+                        is TextFieldState.Error -> {
+                            Image(
+                                painter = painterResource(id = R.drawable.ic_baseline_error_outline_24_red),
+                                contentDescription = "",
+                                colorFilter = ColorFilter.tint(MaterialTheme.colors.error)
+                            )
+                        }
+                        is TextFieldState.Success -> {
+                            Image(
+                                painter = painterResource(id = R.drawable.ic_baseline_check_24),
+                                contentDescription = "",
+                                colorFilter = ColorFilter.tint(MyColors.success)
+                            )
+                        }
+                        TextFieldState.Loading -> {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(14.dp),
+                                strokeWidth = 2.dp,
+                                color = MyColors.darkGray
+                            )
+                        }
+                        else -> Unit
                     }
-                    is TextFieldState.Success -> {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_baseline_check_24),
-                            contentDescription = "",
-                            colorFilter = ColorFilter.tint(MyColors.success)
-                        )
-                    }
-                    TextFieldState.Loading -> {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(14.dp),
-                            strokeWidth = 2.dp,
-                            color = MyColors.darkGray
-                        )
-                    }
-                    else -> Unit
                 }
             },
             singleLine = maxLines == 1,
@@ -283,20 +316,19 @@ fun CustomTextFieldWithErrorImage(
                 fontWeight = font.weight,
             ),
         )
-        if (state is TextFieldState.Error && state.error != 0)
-            Text(
-                text = stringResource(id = state.error),
-                color = MyColors.danger,
-                style = MaterialTheme.typography.caption,
-                modifier = Modifier.padding(start = 8.dp, top = 8.dp)
-            )
-        else if (state is TextFieldState.Success && state.message != null)
-            Text(
-                text = stringResource(id = state.message),
-                color = MyColors.success,
-                style = MaterialTheme.typography.caption,
-                modifier = Modifier.padding(start = 8.dp, top = 8.dp)
-            )
-
+//        if (state is TextFieldState.Error && state.error != 0)
+//            Text(
+//                text = stringResource(id = state.error),
+//                color = MyColors.danger,
+//                style = MaterialTheme.typography.caption,
+//                modifier = Modifier.padding(start = 8.dp, top = 8.dp)
+//            )
+//        else if (state is TextFieldState.Success && state.message != null)
+//            Text(
+//                text = stringResource(id = state.message),
+//                color = MyColors.success,
+//                style = MaterialTheme.typography.caption,
+//                modifier = Modifier.padding(start = 8.dp, top = 8.dp)
+//            )
     }
 }
