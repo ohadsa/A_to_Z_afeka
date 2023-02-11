@@ -367,7 +367,7 @@ class MainViewModel @Inject constructor(
             realTimeDB.getReference("users").child(id).child("favoriteCredit")
                 .setValue(userData.value.favoriteCredit + creditToAdd)
             realTimeDB.getReference("users").child("wishCredit")
-                .setValue(userData.value.favoriteCredit + creditToAdd)
+                .setValue(userData.value.wishCredit + creditToAdd)
         }
     }
 }
