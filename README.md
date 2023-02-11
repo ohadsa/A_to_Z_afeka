@@ -16,7 +16,7 @@
 <li>Hilt Dependency injection</li>
 <li>Coroutines and flows</li>
 <li>Retrofit2</li>
-<li>Single Activity Pattern</li>
+<li>Single Activity Pattern</li> 
 <li>Material Design</li>
 <li>Room Database</li>
 </ol>
